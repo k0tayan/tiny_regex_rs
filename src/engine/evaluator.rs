@@ -65,14 +65,30 @@ fn eval_depth(
                     return Ok(false);
                 }
             }
+            Instruction::Dot => {
+                if line.get(sp).is_some() {
+                    safe_add(&mut pc, &1, || Box::new(EvalError::PCOverFlow))?;
+                    safe_add(&mut sp, &1, || Box::new(EvalError::SPOverFlow))?;
+                } else {
+                    return Ok(false);
+                }
+            }
             Instruction::Match => {
                 return Ok(true);
             }
             Instruction::Jump(addr) => {
                 // TODO: PCをaddrにするのみ
+                pc = *addr;
             }
             Instruction::Split(addr1, addr2) => {
                 // TODO: 再帰呼び出しで2つのアドレスに対してマッチングさせる
+                if eval_depth(inst, line, *addr1, sp)?{
+                    return Ok(true);
+                }
+                if eval_depth(inst, line, *addr2, sp)?{
+                    return Ok(true);
+                }
+                return Ok(false);
             }
         }
     }
@@ -118,6 +134,18 @@ fn eval_width(inst: &[Instruction], line: &[char]) -> Result<bool, Box<EvalError
                             pop_ctx(&mut pc, &mut sp, &mut ctx)?;
                         }
                     }
+                } else {
+                    if ctx.is_empty() {
+                        return Ok(false);
+                    } else {
+                        pop_ctx(&mut pc, &mut sp, &mut ctx)?;
+                    }
+                }
+            },
+            Instruction::Dot => {
+                if line.get(sp).is_some() {
+                    safe_add(&mut pc, &1, || Box::new(EvalError::PCOverFlow))?;
+                    safe_add(&mut sp, &1, || Box::new(EvalError::SPOverFlow))?;
                 } else {
                     if ctx.is_empty() {
                         return Ok(false);

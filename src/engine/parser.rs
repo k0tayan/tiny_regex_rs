@@ -42,6 +42,7 @@ impl Error for ParseError {} // エラー用に、Errorトレイトを実装
 #[derive(Debug)]
 pub enum AST {
     Char(char),
+    Dot,
     Plus(Box<AST>),
     Star(Box<AST>),
     Question(Box<AST>),
@@ -116,6 +117,7 @@ pub fn parse(expr: &str) -> Result<AST, Box<ParseError>> {
                         }
                     }
                     '\\' => state = ParseState::Escape,
+                    '.' => seq.push(AST::Dot),
                     _ => seq.push(AST::Char(c)),
                 };
             }
@@ -172,7 +174,7 @@ fn parse_plus_star_question(
 /// 特殊文字のエスケープ
 fn parse_escape(pos: usize, c: char) -> Result<AST, Box<ParseError>> {
     match c {
-        '\\' | '(' | ')' | '|' | '+' | '*' | '?' => Ok(AST::Char(c)),
+        '\\' | '(' | ')' | '|' | '+' | '*' | '?' | '.' => Ok(AST::Char(c)),
         _ => {
             let err = Box::new(ParseError::InvalidEscape(pos, c));
             Err(err)

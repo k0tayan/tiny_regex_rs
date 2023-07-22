@@ -59,6 +59,7 @@ mod tests {
     use crate::{
         engine::do_matching,
         helper::{safe_add, SafeAdd},
+        engine::print,
     };
 
     #[test]
@@ -94,5 +95,46 @@ mod tests {
         assert!(!do_matching("abc|def", "efa", true).unwrap());
         assert!(!do_matching("(ab|cd)+", "", true).unwrap());
         assert!(!do_matching("abc?", "acb", true).unwrap());
+
+        // 自分で書いたテスト
+        // ?演算子を使用。任意の文字が0回または1回出現する
+        assert!(do_matching(".?.", "abc", true).unwrap());
+        assert!(do_matching(".?.", "ac", true).unwrap());
+
+        // *演算子を使用。任意の文字が0回以上出現する
+        assert!(do_matching("a.*b", "acb", true).unwrap());
+        assert!(do_matching("a.*b", "ab", true).unwrap());
+
+        // +演算子を使用。任意の文字が1回以上出現する
+        assert!(do_matching("a.+b", "acb", true).unwrap());
+        assert!(!do_matching("a.+b", "ab", true).unwrap());  // 中に何か文字がなければならない
+
+        // ?と*を組み合わせて使用
+        assert!(do_matching(".?.*a", "ba", true).unwrap());
+        assert!(do_matching(".?.*a", "a", true).unwrap());
+
+        // ?と+を組み合わせて使用
+        assert!(do_matching(".?.+a", "ba", true).unwrap());
+        assert!(!do_matching(".?.+a", "a", true).unwrap());  // 中に何か文字がなければならない
+
+        // *と+を組み合わせて使用
+        assert!(do_matching("a.*.+b", "acccb", true).unwrap());
+        assert!(do_matching("a.*.+b", "accb", true).unwrap());
+        assert!(!do_matching("a.*.+b", "ab", true).unwrap());  // 中に何か文字がなければならない
+
+        // ?、*、+を全て組み合わせて使用
+        assert!(do_matching("a?.*.+b", "acb", true).unwrap());
+        assert!(do_matching("a?.*.+b", "accb", true).unwrap());
+        assert!(!do_matching("a?.*.+b", "b", true).unwrap());  // 'a'または何か文字がなければならない
+
+    }
+    #[test]
+    fn test_print(){
+        assert!(print("abc").is_ok());
+        assert!(print("abc|def").is_ok());
+        assert!(print("(abc)*").is_ok());
+        assert!(print("(ab|cd)+").is_ok());
+        assert!(print("abc?").is_ok());
+        assert!(print("e.s.*").is_ok());
     }
 }
